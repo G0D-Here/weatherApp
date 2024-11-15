@@ -17,7 +17,7 @@ class ApiViewModel @Inject constructor(private val repository: Repository) : Vie
         mutableStateOf(Resource.Loading)
     val weatherResponse: MutableState<Resource<WeatherResponse>> = _weatherResponse
 
-    fun getWeather(lat: Double = 23.1735296, lon: Double = 79.9277056) {
+    fun getWeather(lat: Double = 28.6139, lon: Double = 77.2090) {
         viewModelScope.launch {
             val result = repository.getWeatherData(lat, lon)
             _weatherResponse.value = result

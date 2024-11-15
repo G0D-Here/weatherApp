@@ -1,5 +1,8 @@
 package com.example.weatherapiapp.screens.main_ui_screen
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,6 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.weatherapiapp.R
 import com.example.weatherapiapp.data.collect_in.Resource
 import com.example.weatherapiapp.screens.ApiViewModel
+import com.example.weatherapiapp.screens.components.CurrentLocationComponent
 import com.example.weatherapiapp.screens.components.SearchBar
 import com.example.weatherapiapp.screens.components.TempCard
 import com.example.weatherapiapp.screens.components.TemperatureCard
@@ -37,10 +42,14 @@ import com.example.weatherapiapp.screens.components.WindCard
 
 @Composable
 fun MainScreen(viewModel: ApiViewModel = hiltViewModel()) {
+
     val weatherData by viewModel.weatherResponse
     LaunchedEffect(Unit) {
         viewModel.getWeather()
     }
+
+    val context = LocalContext.current
+    CurrentLocationComponent(context = context, viewModel = viewModel)
     weatherData.let {
         when (it) {
             is Resource.Failure -> {
@@ -72,6 +81,18 @@ fun MainScreen(viewModel: ApiViewModel = hiltViewModel()) {
                             .verticalScroll(state = rememberScrollState()),
 
                         ) {
+                        val launcher = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.RequestPermission()
+                        ) { isGranted: Boolean ->
+                            if (isGranted) {
+                                // Permission granted, trigger location fetch
+                            } else {
+                                // Handle permission denied
+                            }
+                        }
+                        LaunchedEffect(Unit) {
+                            launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                        }
                         Spacer(modifier = Modifier.height(10.dp))
                         SearchBar(weather = it.result)
                         TemperatureCard(it.result.main, it.result.weather.first(), it.result)
@@ -139,9 +160,10 @@ fun MainScreen(viewModel: ApiViewModel = hiltViewModel()) {
                 }
             }
         }
-
     }
+
 }
+
 
 fun formatUnixTime(unixTime: Int): String {
     // Convert the Unix timestamp (in seconds) to milliseconds
